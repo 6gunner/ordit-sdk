@@ -103,6 +103,8 @@ export class Inscriber extends PSBTBuilder {
   }
 
   async build() {
+    console.log(`suitableUnspent = `, this.suitableUnspent)
+    console.log(`payment = `, this.payment)
     if (!this.suitableUnspent || !this.payment) {
       throw new Error("Failed to build PSBT. Transaction not ready")
     }
@@ -276,8 +278,8 @@ export class Inscriber extends PSBTBuilder {
     const amount = this.recovery
       ? this.outputAmount - this.fee
       : skipStrictSatsCheck && customAmount && !isNaN(customAmount)
-      ? customAmount
-      : this.outputAmount + this.fee
+        ? customAmount
+        : this.outputAmount + this.fee
     const [utxo] = await this.retrieveSelectedUTXOs(this.commitAddress!, amount)
     this.suitableUnspent = utxo
     this.ready = true

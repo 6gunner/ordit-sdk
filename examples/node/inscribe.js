@@ -1,4 +1,4 @@
-import { JsonRpcDatasource } from "@sadoprotocol/ordit-sdk";
+import { JsonRpcDatasource } from "@sadoprotocol/ordit-sdk"
 import { Inscriber, Ordit } from "@sadoprotocol/ordit-sdk"
 
 const MNEMONIC = "<mnemonic>"
@@ -10,9 +10,9 @@ async function main() {
   const wallet = new Ordit({
     bip39: MNEMONIC,
     network
-  });
+  })
 
-  wallet.setDefaultAddress('taproot')
+  wallet.setDefaultAddress("taproot")
 
   // new inscription tx
   const transaction = new Inscriber({
@@ -21,10 +21,11 @@ async function main() {
     publicKey: wallet.publicKey,
     changeAddress: wallet.selectedAddress,
     destination: wallet.selectedAddress,
-    mediaContent: 'Hello World',
+    mediaContent: "Hello World",
     mediaType: "text/plain",
     feeRate: 3,
-    meta: { // Flexible object: Record<string, any>
+    meta: {
+      // Flexible object: Record<string, any>
       title: "Example title",
       desc: "Lorem ipsum",
       slug: "cool-digital-artifact",
@@ -38,23 +39,24 @@ async function main() {
   })
 
   // generate deposit address and fee for inscription
-  const revealed = await transaction.generateCommit();
+  const revealed = await transaction.generateCommit()
   console.log(revealed) // deposit revealFee to address
 
   // confirm if deposit address has been funded
-  const ready = await transaction.isReady();
+  const ready = await transaction.isReady()
 
-  if (ready || transaction.ready) {
-    // build transaction
-    await transaction.build();
+  // if (ready || transaction.ready) {
+  // build transaction
+  await transaction.build()
 
-    // sign transaction
-    const signedTxHex = wallet.signPsbt(transaction.toHex(), { isRevealTx: true });
+  console.log("hex = ", transaction.toHex())
+  // sign transaction
+  const signedTxHex = wallet.signPsbt(transaction.toHex(), { isRevealTx: true })
 
-    // Broadcast transaction
-    const tx = await datasource.relay({ hex: signedTxHex });
-    console.log(tx);
-  }
+  // Broadcast transaction
+  const tx = await datasource.relay({ hex: signedTxHex })
+  console.log(tx)
+  // }
 }
 
-main();
+main()
