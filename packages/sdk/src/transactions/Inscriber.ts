@@ -32,7 +32,7 @@ export class Inscriber extends PSBTBuilder {
   private payment: bitcoin.payments.Payment | null = null
   private suitableUnspent: UTXOLimited | null = null
   private recovery = false
-  private recoverAmount: number = 0
+  private recoverAmount = 0
   private safeMode: OnOffUnion
   private encodeMetadata: boolean
   private previewMode = false
@@ -96,7 +96,10 @@ export class Inscriber extends PSBTBuilder {
     return this.meta && this.encodeMetadata ? encodeObject(this.meta) : this.meta
   }
 
-  async build() {
+  async build(suitableUnspent?: any) {
+    if (!this.suitableUnspent) {
+      this.suitableUnspent = suitableUnspent
+    }
     if (!this.suitableUnspent || !this.payment) {
       throw new OrditSDKError("Failed to build PSBT. Transaction not ready")
     }
@@ -133,10 +136,12 @@ export class Inscriber extends PSBTBuilder {
     if (this.recovery) {
       this.recoverAmount = this.suitableUnspent.sats - this.fee
       // when in recovery mode, there will only be 1 output
-      this.outputs = [{
-        address: this.changeAddress || this.address,
-        value: this.recoverAmount
-      }]
+      this.outputs = [
+        {
+          address: this.changeAddress || this.address,
+          value: this.recoverAmount
+        }
+      ]
     }
 
     await this.prepare() // prepare PSBT using PSBTBuilder

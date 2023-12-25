@@ -63,3 +63,5 @@ npm-debug.log*
 lerna-debug.log*
 
 **/dist
+/examples/unisat-web3-demo/build
+/.vscode
