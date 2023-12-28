@@ -243,7 +243,6 @@ export default class JsonRpcDatasource extends BaseDatasource {
     if (!address) {
       throw new Error("Invalid request")
     }
-
     return rpc[this.network].call<GetAddressTokensResponse[]>("Brc20.Address.GetTokens", { address }, rpc.id)
   }
 }

@@ -3,7 +3,7 @@ import { BRC20Deploy, JsonRpcDatasource, Ordit } from "@sadoprotocol/ordit-sdk"
 const config = {
   MNEMONIC: "bone cycle whale exotic fall garbage bunker theme material annual elbow genre",
   network: "testnet",
-  tick: "CDNB"
+  tick: "xnoa"
 }
 
 const wallet = new Ordit({
@@ -32,7 +32,6 @@ async function main() {
   console.log("hex = ", hex)
   const signedTxHex = wallet.signPsbt(hex, { isRevealTx: true })
   const txId = await datasource.relay({ hex: signedTxHex })
-
   console.log({ txId })
 }
 
