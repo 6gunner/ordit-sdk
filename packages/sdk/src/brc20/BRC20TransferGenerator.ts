@@ -7,13 +7,12 @@ export class BRC20TransferGenerator extends BRC20TransferBase {
   }
 
   private async validateTransferOptions() {
-    // BRC20TransferBase.validateTransferOptions({
-    //   amount: this.amount,
-    //   tick: this.tick,
-    //   datasource: this.datasource,
-    //   network: this.network
-    // })
-
+    BRC20TransferBase.validateTransferOptions({
+      amount: this.amount,
+      tick: this.tick,
+      datasource: this.datasource,
+      network: this.network
+    })
     this.generatePayload()
   }
 
@@ -39,7 +38,7 @@ export class BRC20TransferGenerator extends BRC20TransferBase {
       datasource: this.datasource,
       network: this.network
     })
-    // if (!isOverallBalanceSufficient) return
+    if (!isOverallBalanceSufficient) return
 
     await this.validateTransferOptions()
 

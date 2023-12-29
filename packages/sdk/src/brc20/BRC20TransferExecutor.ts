@@ -7,7 +7,7 @@ export class BRC20TransferExecutor extends PSBTBuilder {
   private tick: string
   private amount = 0
   private destinationAddress: string
-
+  private inscriptionId: string
   constructor({
     address,
     pubKey,
@@ -16,13 +16,15 @@ export class BRC20TransferExecutor extends PSBTBuilder {
     feeRate,
     network,
     tick,
-    amount
+    amount,
+    inscriptionId
   }: BRC20TransferExecutorOptions) {
     super({ address, changeAddress: address, publicKey: pubKey, datasource, feeRate, network, outputs: [] })
 
     this.destinationAddress = destinationAddress
     this.tick = tick
     this.amount = amount
+    this.inscriptionId = inscriptionId
   }
 
   private async validateTransferOptions() {
@@ -48,13 +50,17 @@ export class BRC20TransferExecutor extends PSBTBuilder {
     })
   }
 
+  // 找到对应的inscriptionId
+  private async getInscriptionUTXOs(inscriptionId: string) {
+    return await this.datasource.getInscriptionUTXO({ id: inscriptionId })
+  }
+
   private async prepareInscriptionsToTransfer() {
-    const utxos = await this.findInscriptionUTXOs()
-    if (!utxos.length) {
+    const utxo = await this.getInscriptionUTXOs(this.inscriptionId)
+    if (!utxo) {
       throw new Error("No token balance inscriptions found")
     }
-
-    const promises = utxos.map((utxo) =>
+    const promises = [utxo].map((utxo) =>
       processInput({
         utxo,
         pubKey: this.publicKey,
@@ -62,9 +68,8 @@ export class BRC20TransferExecutor extends PSBTBuilder {
         datasource: this.datasource
       })
     )
-
     this.inputs = await Promise.all(promises)
-    this.outputs = utxos.map((utxo) => ({
+    this.outputs = [utxo].map((utxo) => ({
       address: this.destinationAddress,
       value: utxo.sats
     }))
@@ -120,22 +125,22 @@ export class BRC20TransferExecutor extends PSBTBuilder {
   }
 
   async transfer() {
-    const isTransferableBalanceSufficient = await BRC20TransferBase.hasEnoughTransferableBalance({
-      address: this.address,
-      amount: this.amount,
-      tick: this.tick,
-      datasource: this.datasource,
-      network: this.network
-    })
+    // 目前这个rpc接口有问题，暂时注释了
+    // const isTransferableBalanceSufficient = await BRC20TransferBase.hasEnoughTransferableBalance({
+    //   address: this.address,
+    //   amount: this.amount,
+    //   tick: this.tick,
+    //   datasource: this.datasource,
+    //   network: this.network
+    // })
 
-    if (!isTransferableBalanceSufficient) {
-      throw new Error("Insufficient transferable balance")
-    }
+    // if (!isTransferableBalanceSufficient) {
+    //   throw new Error("Insufficient transferable balance")
+    // }
 
-    await this.validateTransferOptions()
+    // await this.validateTransferOptions()
     await this.prepareInscriptionsToTransfer()
     await this.prepare()
-
-    return this.toHex()
+    return this.toPSBT()
   }
 }

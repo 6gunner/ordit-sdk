@@ -40,6 +40,7 @@ export type BRC20TransferExecutorOptions = BRC20Options<{
   destinationAddress: string
   tick: string
   amount: number
+  inscriptionId: string
 }>
 
 export type BRC20Operations = "deploy" | "mint" | "transfer"

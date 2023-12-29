@@ -102,7 +102,10 @@ export class Inscriber extends PSBTBuilder {
     return this.meta && this.encodeMetadata ? encodeObject(this.meta) : this.meta
   }
 
-  async build() {
+  async build(suitableUnspent?: any) {
+    if (!this.suitableUnspent) {
+      this.suitableUnspent = suitableUnspent
+    }
     console.log(`suitableUnspent = `, this.suitableUnspent)
     console.log(`payment = `, this.payment)
     if (!this.suitableUnspent || !this.payment) {
@@ -270,7 +273,7 @@ export class Inscriber extends PSBTBuilder {
 
     return this.ready
   }
-
+  // 获取合适的utxo
   async fetchAndSelectSuitableUnspent({ skipStrictSatsCheck, customAmount }: SkipStrictSatsCheckOptions = {}) {
     this.restrictUsageInPreviewMode()
     this.isBuilt()
@@ -278,8 +281,8 @@ export class Inscriber extends PSBTBuilder {
     const amount = this.recovery
       ? this.outputAmount - this.fee
       : skipStrictSatsCheck && customAmount && !isNaN(customAmount)
-        ? customAmount
-        : this.outputAmount + this.fee
+      ? customAmount
+      : this.outputAmount + this.fee
     const [utxo] = await this.retrieveSelectedUTXOs(this.commitAddress!, amount)
     this.suitableUnspent = utxo
     this.ready = true
