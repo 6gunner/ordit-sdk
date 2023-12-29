@@ -28,10 +28,21 @@ async function main() {
     address: wallet.selectedAddress,
     publicKey: wallet.publicKey,
     changeAddress: wallet.selectedAddress,
-    destinationAddress: "tb1plf84y3ak54k6m3kr9rzka9skynkn5mhfjmaenn70epdzamtgpadqu8uxx9",
-    mediaContent: dataString,
+    destination: wallet.selectedAddress,
+    mediaContent: "Hello World",
     mediaType: "text/plain",
     feeRate: 3,
+    meta: {
+      // Flexible object: Record<string, any>
+      title: "Example title",
+      desc: "Lorem ipsum",
+      slug: "cool-digital-artifact",
+      creator: {
+        name: "Your Name",
+        email: "artist@example.org",
+        address: wallet.selectedAddress
+      }
+    },
     postage: 1500 // base value of the inscription in sats
   })
 
@@ -50,6 +61,7 @@ async function main() {
   await transaction.build()
   console.log(transaction.toHex())
 
+  console.log("hex = ", transaction.toHex())
   // sign transaction
   const signedTxHex = wallet.signPsbt(transaction.toHex(), { isRevealTx: true })
 

@@ -3,6 +3,7 @@ import * as bitcoin from "bitcoinjs-lib"
 import { Tapleaf } from "bitcoinjs-lib/src/types"
 
 import {
+  BaseDatasource,
   buildWitnessScript,
   createTransaction,
   encodeObject,
@@ -25,10 +26,10 @@ export class Inscriber extends PSBTBuilder {
   protected mediaContent: string
   protected meta?: NestedObject
   protected postage: number
+  protected destinationAddress: string
 
   private ready = false
   private commitAddress: string | null = null
-  private destinationAddress: string
   private payment: bitcoin.payments.Payment | null = null
   private suitableUnspent: UTXOLimited | null = null
   private recovery = false
@@ -43,6 +44,7 @@ export class Inscriber extends PSBTBuilder {
   }
   private taprootTree!: [Tapleaf, Tapleaf]
 
+  // TODO: bind datasource to constructor options
   constructor({
     network,
     address,
@@ -56,7 +58,8 @@ export class Inscriber extends PSBTBuilder {
     outputs = [],
     encodeMetadata = false,
     safeMode,
-    meta
+    meta,
+    datasource
   }: InscriberArgOptions) {
     super({
       address,
@@ -65,6 +68,7 @@ export class Inscriber extends PSBTBuilder {
       network,
       publicKey,
       outputs,
+      datasource,
       autoAdjustment: false
     })
     if (!publicKey || !changeAddress || !mediaContent) {
@@ -92,6 +96,11 @@ export class Inscriber extends PSBTBuilder {
     }
   }
 
+  set media({ content, type }: SetContentOptions) {
+    this.mediaContent = content
+    this.mediaType = type
+  }
+
   private getMetadata() {
     return this.meta && this.encodeMetadata ? encodeObject(this.meta) : this.meta
   }
@@ -100,6 +109,8 @@ export class Inscriber extends PSBTBuilder {
     if (!this.suitableUnspent) {
       this.suitableUnspent = suitableUnspent
     }
+    console.log(`suitableUnspent = `, this.suitableUnspent)
+    console.log(`payment = `, this.payment)
     if (!this.suitableUnspent || !this.payment) {
       throw new OrditSDKError("Failed to build PSBT. Transaction not ready")
     }
@@ -275,7 +286,7 @@ export class Inscriber extends PSBTBuilder {
 
     return this.ready
   }
-
+  // 获取合适的utxo
   async fetchAndSelectSuitableUnspent({ skipStrictSatsCheck, customAmount }: SkipStrictSatsCheckOptions = {}) {
     this.restrictUsageInPreviewMode()
     this.isBuilt()
@@ -317,6 +328,12 @@ export type InscriberArgOptions = Pick<GetWalletOptions, "safeMode"> & {
   meta?: NestedObject
   outputs?: Outputs
   encodeMetadata?: boolean
+  datasource?: BaseDatasource
+}
+
+interface SetContentOptions {
+  content: string
+  type: string
 }
 
 type Outputs = Array<{ address: string; value: number }>

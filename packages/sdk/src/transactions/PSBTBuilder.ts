@@ -297,7 +297,8 @@ export class PSBTBuilder extends FeeEstimator {
     const utxos = await this.datasource.getSpendables({
       address: address || this.address,
       value: convertSatoshisToBTC(amountToRequest),
-      filter: this.getReservedUTXOs()
+      filter: this.getReservedUTXOs(),
+      type: "all"
     })
 
     this.noMoreUTXOS = utxos.length === 0
