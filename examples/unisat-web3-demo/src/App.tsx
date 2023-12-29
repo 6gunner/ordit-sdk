@@ -1,92 +1,94 @@
-import React, { useEffect, useRef, useState } from "react";
-import "./App.css";
-import { Button, Card, Input, Radio } from "antd";
-import Brc20Card from "./components/Brc20Card";
-import Brc20MintCard from "./components/Brc20MintCard";
+import React, { useEffect, useRef, useState } from "react"
+import "./App.css"
+import { Button, Card, Input, Radio } from "antd"
+import Brc20DeployCard from "./components/Brc20DeployCard"
+import Brc20MintCard from "./components/Brc20MintCard"
+import Brc20TransferCard from "./components/Brc20TransferCard"
+import SignPsbtCard from "./components/SignPsbtCard"
 
 function App() {
-  const [unisatInstalled, setUnisatInstalled] = useState(false);
-  const [connected, setConnected] = useState(false);
-  const [accounts, setAccounts] = useState<string[]>([]);
-  const [publicKey, setPublicKey] = useState("");
-  const [address, setAddress] = useState("");
+  const [unisatInstalled, setUnisatInstalled] = useState(false)
+  const [connected, setConnected] = useState(false)
+  const [accounts, setAccounts] = useState<string[]>([])
+  const [publicKey, setPublicKey] = useState("")
+  const [address, setAddress] = useState("")
   const [balance, setBalance] = useState({
     confirmed: 0,
     unconfirmed: 0,
-    total: 0,
-  });
-  const [network, setNetwork] = useState("livenet");
+    total: 0
+  })
+  const [network, setNetwork] = useState("livenet")
 
   const getBasicInfo = async () => {
-    const unisat = (window as any).unisat;
-    const [address] = await unisat.getAccounts();
-    setAddress(address);
+    const unisat = (window as any).unisat
+    const [address] = await unisat.getAccounts()
+    setAddress(address)
 
-    const publicKey = await unisat.getPublicKey();
-    setPublicKey(publicKey);
+    const publicKey = await unisat.getPublicKey()
+    setPublicKey(publicKey)
 
-    const balance = await unisat.getBalance();
-    setBalance(balance);
+    const balance = await unisat.getBalance()
+    setBalance(balance)
 
-    const network = await unisat.getNetwork();
-    setNetwork(network);
-  };
+    const network = await unisat.getNetwork()
+    setNetwork(network)
+  }
 
   const selfRef = useRef<{ accounts: string[] }>({
-    accounts: [],
-  });
-  const self = selfRef.current;
+    accounts: []
+  })
+  const self = selfRef.current
   const handleAccountsChanged = (_accounts: string[]) => {
     if (self.accounts[0] === _accounts[0]) {
       // prevent from triggering twice
-      return;
+      return
     }
-    self.accounts = _accounts;
+    self.accounts = _accounts
     if (_accounts.length > 0) {
-      setAccounts(_accounts);
-      setConnected(true);
+      setAccounts(_accounts)
+      setConnected(true)
 
-      setAddress(_accounts[0]);
+      setAddress(_accounts[0])
 
-      getBasicInfo();
+      getBasicInfo()
     } else {
-      setConnected(false);
+      setConnected(false)
     }
-  };
+  }
 
   const handleNetworkChanged = (network: string) => {
-    setNetwork(network);
-    getBasicInfo();
-  };
+    setNetwork(network)
+    getBasicInfo()
+  }
 
   useEffect(() => {
     async function checkUnisat() {
-      let unisat = (window as any).unisat;
+      let unisat = (window as any).unisat
 
       for (let i = 1; i < 10 && !unisat; i += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 100 * i));
-        unisat = (window as any).unisat;
+        await new Promise((resolve) => setTimeout(resolve, 100 * i))
+        unisat = (window as any).unisat
       }
 
       if (unisat) {
-        setUnisatInstalled(true);
-      } else if (!unisat) return;
+        setUnisatInstalled(true)
+      } else if (!unisat) return
 
       unisat.getAccounts().then((accounts: string[]) => {
-        handleAccountsChanged(accounts);
-      });
+        handleAccountsChanged(accounts)
+      })
 
-      unisat.on("accountsChanged", handleAccountsChanged);
-      unisat.on("networkChanged", handleNetworkChanged);
+      unisat.on("accountsChanged", handleAccountsChanged)
+      unisat.on("networkChanged", handleNetworkChanged)
 
       return () => {
-        unisat.removeListener("accountsChanged", handleAccountsChanged);
-        unisat.removeListener("networkChanged", handleNetworkChanged);
-      };
+        unisat.removeListener("accountsChanged", handleAccountsChanged)
+        unisat.removeListener("networkChanged", handleNetworkChanged)
+      }
     }
 
-    checkUnisat().then();
-  }, []);
+    checkUnisat().then()
+  }, [])
 
   if (!unisatInstalled) {
     return (
@@ -95,7 +97,7 @@ function App() {
           <div>
             <Button
               onClick={() => {
-                window.location.href = "https://unisat.io";
+                window.location.href = "https://unisat.io"
               }}
             >
               Install Unisat Wallet
@@ -103,9 +105,9 @@ function App() {
           </div>
         </header>
       </div>
-    );
+    )
   }
-  const unisat = (window as any).unisat;
+  const unisat = (window as any).unisat
   return (
     <div className="App">
       <header className="App-header">
@@ -116,14 +118,10 @@ function App() {
             style={{
               display: "flex",
               flexDirection: "column",
-              alignItems: "center",
+              alignItems: "center"
             }}
           >
-            <Card
-              size="small"
-              title="Basic Info"
-              style={{ width: 300, margin: 10 }}
-            >
+            <Card size="small" title="Basic Info" style={{ width: 300, margin: 10 }}>
               <div style={{ textAlign: "left", marginTop: 10 }}>
                 <div style={{ fontWeight: "bold" }}>Address:</div>
                 <div style={{ wordWrap: "break-word" }}>{address}</div>
@@ -139,18 +137,13 @@ function App() {
                 <div style={{ wordWrap: "break-word" }}>{balance.total}</div>
               </div>
             </Card>
-
-            <Card
-              size="small"
-              title="Switch Network"
-              style={{ width: 300, margin: 10 }}
-            >
+            {/* <Card size="small" title="Switch Network" style={{ width: 300, margin: 10 }}>
               <div style={{ textAlign: "left", marginTop: 10 }}>
                 <div style={{ fontWeight: "bold" }}>Network:</div>
                 <Radio.Group
                   onChange={async (e) => {
-                    const network = await unisat.switchNetwork(e.target.value);
-                    setNetwork(network);
+                    const network = await unisat.switchNetwork(e.target.value)
+                    setNetwork(network)
                   }}
                   value={network}
                 >
@@ -158,15 +151,22 @@ function App() {
                   <Radio value={"testnet"}>testnet</Radio>
                 </Radio.Group>
               </div>
-            </Card>
-            <Brc20MintCard />
+            </Card> */}
+            <div style={{ display: "flex" }}>
+              <SignPsbtCard pubKey={publicKey} address={address}></SignPsbtCard>
+            </div>
+            <div style={{ display: "flex" }}>
+              <Brc20DeployCard />
+              <Brc20MintCard />
+              <Brc20TransferCard sourceAddress={address} pubKey={publicKey}></Brc20TransferCard>
+            </div>
           </div>
         ) : (
           <div>
             <Button
               onClick={async () => {
-                const result = await unisat.requestAccounts();
-                handleAccountsChanged(result);
+                const result = await unisat.requestAccounts()
+                handleAccountsChanged(result)
               }}
             >
               Connect Unisat Wallet
@@ -175,7 +175,7 @@ function App() {
         )}
       </header>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

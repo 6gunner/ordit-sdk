@@ -1,4 +1,4 @@
-import { ordit } from "@sadoprotocol/ordit-sdk"; //import Ordit
+import { ordit } from "@sadoprotocol/ordit-sdk" //import Ordit
 
 async function main() {
   // Replace accordingly
@@ -18,15 +18,15 @@ async function main() {
         cardinals: 1337
       }
     ]
-  };
+  }
 
   // You need to sign this externally (tip: try window.unisat.signPsbt)
-  const psbt = await ordit.transactions.createPsbt(psbtTemplate);
-  console.log(psbt);
+  const psbt = await ordit.transactions.createPsbt(psbtTemplate)
+  console.log(psbt)
 
-  const hex = "your signed PSBT hex here";
-  const txId = await ordit.transactions.relayTransaction(hex, "testnet");
-  console.log(txId);
+  const hex = "your signed PSBT hex here"
+  const txId = await ordit.transactions.relayTransaction(hex, "testnet")
+  console.log(txId)
 }
 
-main();
+main()

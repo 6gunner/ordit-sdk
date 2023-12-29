@@ -1,8 +1,9 @@
 import React, { useState } from "react"
 import { Card, Input, Button } from "antd"
-import { JsonRpcDatasource, unisat } from "@sadoprotocol/ordit-sdk"
-import { Inscriber, Ordit, BRC20Mint } from "@sadoprotocol/ordit-sdk"
+import { JsonRpcDatasource } from "@sadoprotocol/ordit-sdk"
+import { Inscriber, Ordit, BRC20TransferExecutor } from "@sadoprotocol/ordit-sdk"
 import { waitUntilUTXO } from "../api/utxo"
+import { confirmInscriptionFound } from "../api/inscription"
 
 const MNEMONIC = "bone cycle whale exotic fall garbage bunker theme material annual elbow genre"
 const network = "testnet"
@@ -13,19 +14,24 @@ const wallet = new Ordit({
 })
 wallet.setDefaultAddress("taproot")
 
-function Brc20MintCard() {
-  const [toAddress, setToAddress] = useState("tb1pzmc2f2rt55husvfwx6z34harcpy8lg8nmng5a59rhj9x3c9tug8see05x9")
+type Brc20TransferCardProps = {
+  sourceAddress: string
+  pubKey: string
+}
+function Brc20TransferCard(props: Brc20TransferCardProps) {
+  const [toAddress, setToAddress] = useState("tb1plf84y3ak54k6m3kr9rzka9skynkn5mhfjmaenn70epdzamtgpadqu8uxx9")
   const [brc20TokenName, setBrc20TokenName] = useState<string>("peri")
-  const [qty, setQty] = useState<string>("1000")
+  const [qty, setQty] = useState<string>("100")
   const [txid, setTxid] = useState("")
   const [disabled, setDisabled] = useState(false)
-
+  const fromAddress = props.sourceAddress
+  const publicKey = props.pubKey
   const handleClick = async () => {
     setDisabled(true)
     // new inscription tx
     const dataObject = {
       p: "brc-20",
-      op: "mint",
+      op: "transfer",
       tick: brc20TokenName,
       amt: qty
     }
@@ -34,24 +40,14 @@ function Brc20MintCard() {
       address: wallet.selectedAddress!,
       publicKey: wallet.publicKey,
       changeAddress: wallet.selectedAddress!,
-      destinationAddress: toAddress,
+      destinationAddress: fromAddress,
       mediaContent: JSON.stringify(dataObject),
       mediaType: "text/plain",
       feeRate: 3,
       postage: 1500 // base value of the inscription in sats
     })
-    // const inscribe = new BRC20Mint({
-    //   address: wallet.selectedAddress!,
-    //   pubKey: wallet.publicKey,
-    //   destinationAddress: toAddress,
-    //   feeRate: 2,
-    //   network,
-    //   tick: brc20TokenName,
-    //   amount: qty
-    // })
-    // generate deposit address and fee for inscription
     const revealed = await inscribe.generateCommit()
-    console.log(`revealed`, revealed) // deposit revealFee to address
+    console.log(`revealed`, revealed)
     // 拿到这个地址，然后用unisat向这个地址发送转账
     try {
       // 拿到这个地址，然后用unisat向这个地址发送转账
@@ -60,10 +56,6 @@ function Brc20MintCard() {
       console.log("发送的交易=", commitTxId)
       const utxos = await waitUntilUTXO(revealed.address)
       console.log(`utxos = `, utxos)
-      // 获取合适的unspent tx
-      // const uTXOLimited = await inscribe.fetchAndSelectSuitableUnspent({ skipStrictSatsCheck: true })
-      // console.log(`uTXOLimited = `, uTXOLimited)
-      // await inscribe.build(uTXOLimited)
       await inscribe.build({
         txid: utxos[utxos.length - 1].txid,
         n: utxos[utxos.length - 1].vout,
@@ -75,10 +67,35 @@ function Brc20MintCard() {
       })
       const revealTxid = await datasource.relay({ hex: signedTxHex, validate: false })
       const inscriptionId = `${revealTxid}i0`
-      setTxid(inscriptionId)
+      // const inscriptionId = "701c386ff6459c095d35f965d3da6150c9a29da41128e99c56d4f2f203da3592i0"
+      // setTxid(inscriptionId)
+      await confirmInscriptionFound(inscriptionId)
+
+      const transferExecutor = new BRC20TransferExecutor({
+        address: fromAddress,
+        pubKey: publicKey,
+        destinationAddress: toAddress,
+        feeRate: 1,
+        network,
+        tick: brc20TokenName,
+        amount: Number(qty),
+        inscriptionId: inscriptionId
+      })
+      const pbst = await transferExecutor.transfer()
+      console.log(`pbst = `, pbst)
+      if (pbst) {
+        const newHex = transferExecutor.toHex()
+        // @ts-ignore
+        const signedTxHex = await window.unisat.signPsbt(newHex)
+        // @ts-ignore
+        const txId = await window.unisat.pushPsbt(signedTxHex)
+        console.log(`txId = `, txId)
+        setTxid(txId)
+      }
       setDisabled(false)
     } catch (e) {
       setTxid((e as any).message)
+      setDisabled(false)
     }
   }
   return (
@@ -122,4 +139,4 @@ function Brc20MintCard() {
   )
 }
 
-export default Brc20MintCard
+export default Brc20TransferCard

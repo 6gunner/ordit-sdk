@@ -18,7 +18,7 @@ async function main() {
     address: wallet.selectedAddress,
     pubKey: wallet.publicKey,
     destinationAddress: wallet.selectedAddress,
-    feeRate: 3,
+    feeRate: 2,
     network: config.network,
     tick: config.tick,
     supply: 1000000000,
